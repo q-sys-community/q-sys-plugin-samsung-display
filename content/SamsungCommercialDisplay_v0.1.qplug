@@ -1,0 +1,918 @@
+-- Plugin for Samsung Commercial Displays by Solo Works London
+-- Built in Lua
+-- For source, contact https://soloworks.co.uk
+
+PluginInfo = {
+	Name = "Samsung~Commercial Display", -- The tilde here indicates folder structure in the Shematic Elements pane
+	Version = "0.1",
+	Id = "SoloWorks.Samsung.CommercialDisplay", -- show this is just a unique id. Show some commented out 'fun' unique ids
+	Description = "Control for Samsung range of Commercial Displays (All models)",
+	ShowDebug = true,
+	Author = "Solo Works London"
+}
+
+-- Once you've drawn your plugin in Designer, you can determine what colors you use a lot. Save yourself some time by putting them in a table, and then simply calling them later.
+local Colors = {
+	White = {255, 255, 255},
+	Black = {0, 0, 0},
+	Red = {255, 0, 0},
+	Green = {0, 255, 0}
+}
+
+-- We can let users determine some of the plugin properties by exposing them here
+-- While this function can be very useful, it is completely optional and not always needed.
+-- If no Properties are set here, only the position and fill properties of your plugin will show in the Properties pane
+function GetProperties()
+	props = {
+		{
+			Name = "IP Address",
+			Type = "string",
+			Value = "127.0.0.1"
+		},
+		{
+			Name = "Force On High",
+			Type = "boolean",
+			Value = false
+		}
+	}
+	return props
+end
+
+-- The below function is optional (like GetProperties() is), but it can allow further customization of what users can and can't do with your plugin.
+-- In this example, when Model 1 is selected in the properties pane, the ability to modify some of the properties will be hidden, only allowing customization with Model 2
+-- Another application of this is if you have different input/output types for different models, and want those properties to be dynamic in the Properties pane
+function RectifyProperties(props)
+	return props
+end
+
+-- The below function is where you will populate the controls for your plugin.
+-- If you've written some of the Runtime code already, simply use the control names you populated in Text Controller/Control Script, and use their Properties to inform the values here
+-- ControlType can be Button, Knob, Indicator or Text
+-- ButtonType ( ControlType == Button ) can be Momentary, Toggle or Trigger
+-- IndicatorType ( ControlType == Indicator ) can be Led, Meter, Text or Status
+-- ControlUnit ( ControlType == Knob ) can be Hz, Float, Integer, Pan, Percent, Position or Seconds
+function GetControls(props)
+	ctls = {
+		-- System Pins
+		{
+			Name = "Online",
+			ControlType = "Indicator",
+			IndicatorType = "Led",
+			PinStyle = "Output",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "ConnectionState",
+			ControlType = "Indicator",
+			IndicatorType = "Text"
+		},
+		{
+			Name = "IPAddress",
+			ControlType = "Indicator",
+			IndicatorType = "Text",
+			PinStyle = "Both",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "Model",
+			ControlType = "Indicator",
+			IndicatorType = "Text",
+			PinStyle = "Output",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "SerialNumber",
+			ControlType = "Indicator",
+			IndicatorType = "Text",
+			PinStyle = "Output",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "SoftwareVersion",
+			ControlType = "Indicator",
+			IndicatorType = "Text",
+			PinStyle = "Output",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "Temperature",
+			ControlType = "Knob",
+			ControlUnit = "Integer",
+			PinStyle = "Output",
+			Min = 0,
+			Max = 125,
+			Count = 1,
+			UserPin = true
+		},
+		-- Control Pins
+		{
+			Name = "Gain",
+			ControlType = "Knob",
+			ControlUnit = "Integer",
+			Min = 0,
+			Max = 100,
+			PinStyle = "Both",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "Mute",
+			ControlType = "Button",
+			ButtonType = "Toggle",
+			PinStyle = "Both",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "PowerOn",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Input",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "PowerOff",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Input",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "PowerState",
+			ControlType = "Indicator",
+			IndicatorType = "Led",
+			PinStyle = "Output",
+			Count = 1,
+			UserPin = true
+		},
+		-- Source
+		{
+			Name = "SourceActive",
+			ControlType = "Knob",
+			ControlUnit = "Integer",
+			PinStyle = "Output",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "SourceHDMI01",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Input",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "SourceHDMI02",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Input",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "SourceDVI01",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Input",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "SourceMagicInfo",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Input",
+			Count = 1,
+			UserPin = true
+		}
+	}
+	return ctls
+end
+
+-- Variable holding Page Names for ease
+local pagenames = {"Display"}
+
+-- This function allows you to populate pages in your plugin.
+function GetPages(props)
+	pages = {}
+	table.insert(pages, {name = pagenames[1]})
+	return pages
+end
+
+-- This function allows you to layout pages in your plugin.
+function GetControlLayout(props)
+	local layout = {}
+	local graphics = {}
+
+	local x, y = 0, 0
+
+	-- System & Connection System
+	layout["Online"] = {
+		PrettyName = "System~Online",
+		Style = "Indicator",
+		Color = {0, 255, 0},
+		Position = {x + 3, y + 25},
+		Size = {25, 25}
+	}
+	layout["ConnectionState"] = {
+		Style = "Text",
+		HTextAlign = "Left",
+		Padding = 5,
+		StrokeWidth = 0,
+		Position = {x + 35, y + 25},
+		Size = {200, 25}
+	}
+	table.insert(
+		graphics,
+		{
+			Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
+			Text = "Connection",
+			HTextAlign = "Left",
+			Fill = Colors.White,
+			CornerRadius = 8,
+			StrokeColor = Colors.Black,
+			StrokeWidth = 1,
+			Position = {x, y},
+			Size = {250, 60} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
+		}
+	)
+
+	-- Meta Data Infomation
+	x, y = 0, 70
+	layout["Model"] = {
+		PrettyName = "System~Model Name",
+		Style = "Text",
+		HTextAlign = "Left",
+		Padding = 5,
+		StrokeWidth = 0,
+		Position = {x + 100, y + 25},
+		Size = {125, 20}
+	}
+	layout["SerialNumber"] = {
+		PrettyName = "System~Serial Number",
+		Style = "Text",
+		HTextAlign = "Left",
+		Padding = 5,
+		StrokeWidth = 0,
+		Position = {x + 100, y + 50},
+		Size = {125, 20}
+	}
+	layout["SoftwareVersion"] = {
+		PrettyName = "System~Software Version",
+		Style = "Text",
+		HTextAlign = "Left",
+		Padding = 5,
+		StrokeWidth = 0,
+		Position = {x + 100, y + 75},
+		Size = {125, 20}
+	}
+	layout["Temperature"] = {
+		PrettyName = "System~Temperature",
+		Style = "Text",
+		HTextAlign = "Left",
+		Padding = 5,
+		StrokeWidth = 0,
+		Color = {223, 0, 36},
+		Position = {x + 100, y + 100},
+		Size = {125, 20}
+	}
+	table.insert(
+		graphics,
+		{
+			Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
+			Text = "Hardware",
+			HTextAlign = "Left",
+			Fill = Colors.White,
+			CornerRadius = 8,
+			StrokeColor = Colors.Black,
+			StrokeWidth = 1,
+			Position = {x, y},
+			Size = {250, 125} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
+		}
+	)
+	table.insert(
+		graphics,
+		{
+			Type = "Text",
+			Text = "Model:",
+			Font = "Roboto",
+			FontSize = 12,
+			FontStyle = "Bold",
+			HTextAlign = "Right",
+			Color = Colors.Black,
+			Position = {x + 10, y + 25},
+			Size = {85, 20}
+		}
+	)
+	table.insert(
+		graphics,
+		{
+			Type = "Text",
+			Text = "Serial No:",
+			Font = "Roboto",
+			FontSize = 12,
+			FontStyle = "Bold",
+			HTextAlign = "Right",
+			Color = Colors.Black,
+			Position = {x + 10, y + 50},
+			Size = {85, 20}
+		}
+	)
+	table.insert(
+		graphics,
+		{
+			Type = "Text",
+			Text = "Firmware:",
+			Font = "Roboto",
+			FontSize = 12,
+			FontStyle = "Bold",
+			HTextAlign = "Right",
+			Color = Colors.Black,
+			Position = {x + 10, y + 75},
+			Size = {85, 20}
+		}
+	)
+	table.insert(
+		graphics,
+		{
+			Type = "Text",
+			Text = "Temperature:",
+			Font = "Roboto",
+			FontSize = 12,
+			FontStyle = "Bold",
+			HTextAlign = "Right",
+			Color = Colors.Black,
+			Position = {x + 10, y + 100},
+			Size = {85, 20}
+		}
+	)
+
+	-- Audio State
+	x, y = 0, 205
+	layout["Gain"] = {
+		PrettyName = "Audio~Gain",
+		Style = "Fader",
+		Position = {x + 50, y + 20},
+		Size = {180, 30}
+	}
+	layout["Mute"] = {
+		Legend = "Mute",
+		PrettyName = "Audio~Mute",
+		Style = "Button",
+		ButtonStyle = "Toggle",
+		Color = {223, 0, 36},
+		UnlinkOffColor = false,
+		Position = {x + 5, y + 20},
+		Size = {30, 30}
+	}
+	table.insert(
+		graphics,
+		{
+			Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
+			Text = "Audio",
+			HTextAlign = "Left",
+			Fill = Colors.White,
+			CornerRadius = 8,
+			StrokeColor = Colors.Black,
+			StrokeWidth = 1,
+			Position = {x, y},
+			Size = {250, 55} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
+		}
+	)
+
+	-- Source & Power State
+	x, y = 0, 270
+	layout["PowerState"] = {
+		PrettyName = "Display~Power State",
+		Style = "Indicator",
+		OffColor = {0, 0, 0},
+		Color = {0, 255, 0},
+		UnlinkOffColor = false,
+		Position = {x + 50, y},
+		Size = {20, 20}
+	}
+	layout["SourceActive"] = {
+		PrettyName = "Display~Source Active",
+		Style = "Fader",
+		Position = {x + 100, y},
+		Size = {36, 16}
+	}
+	layout["PowerOn"] = {
+		Legend = "On",
+		PrettyName = "Display~Power On",
+		Style = "Button",
+		ButtonStyle = "Momentary",
+		Color = {223, 0, 36},
+		UnlinkOffColor = false,
+		Position = {x + 5, y + 20},
+		Size = {30, 30}
+	}
+	layout["PowerOff"] = {
+		Legend = "Off",
+		PrettyName = "Display~Power Off",
+		Style = "Button",
+		ButtonStyle = "Momentary",
+		Color = {223, 0, 36},
+		UnlinkOffColor = false,
+		Position = {x + 35, y + 20},
+		Size = {30, 30}
+	}
+	layout["SourceHDMI01"] = {
+		Legend = "HDMI1",
+		PrettyName = "Display~HDMI 1",
+		Style = "Button",
+		ButtonStyle = "Momentary",
+		Color = {223, 0, 36},
+		UnlinkOffColor = false,
+		Position = {x + 80, y + 20},
+		Size = {40, 30}
+	}
+	layout["SourceHDMI02"] = {
+		Legend = "HDMI2",
+		PrettyName = "Display~HDMI 2",
+		Style = "Button",
+		ButtonStyle = "Momentary",
+		Color = {223, 0, 36},
+		UnlinkOffColor = false,
+		Position = {x + 120, y + 20},
+		Size = {40, 30}
+	}
+	layout["SourceDVI01"] = {
+		Legend = "DVI1",
+		PrettyName = "Display~DVI",
+		Style = "Button",
+		ButtonStyle = "Momentary",
+		Color = {223, 0, 36},
+		UnlinkOffColor = false,
+		Position = {x + 160, y + 20},
+		Size = {40, 30}
+	}
+	layout["SourceMagicInfo"] = {
+		Legend = "Magic Info",
+		PrettyName = "Display~MagicInfo",
+		Style = "Button",
+		ButtonStyle = "Momentary",
+		Color = {223, 0, 36},
+		UnlinkOffColor = false,
+		Position = {x + 200, y + 20},
+		Size = {40, 30}
+	}
+	table.insert(
+		graphics,
+		{
+			Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
+			Text = "Source",
+			HTextAlign = "Left",
+			Fill = Colors.White,
+			CornerRadius = 8,
+			StrokeColor = Colors.Black,
+			StrokeWidth = 1,
+			Position = {x, y},
+			Size = {250, 55} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
+		}
+	)
+
+	return layout, graphics
+end
+
+-- Components provide a way to save or retain certain settings without necessarily displaying it in another control such as a combobox.
+-- For example, the when someone hits the "Save" button on this plugin, it saves the RGB values in the "rgb_storage" component below.
+-- This allows us to do things 'under the hood' which gives the plugin a much sleeker feel.
+function GetComponents(props)
+	return {}
+end
+
+if Controls then
+	-- Local Structure for holding State
+	Samsung = {
+		Host = "192.168.2.185",
+		--Host = "127.0.0.1",
+		Port = 1515,
+		Rx = "",
+		desiredPower = nil,
+		desiredSource = nil,
+		Tx = nil,
+		ConnState = false,
+		Debug = true
+	}
+
+	-- Simple Debug Logger
+	function debug(s)
+		if Samsung.Debug then
+			print(s)
+		end
+	end
+
+	-- Build TCP Client
+	conn = TcpSocket.New()
+	conn.ReadTimeout = 0
+	conn.WriteTimeout = 0
+	conn.ReconnectTimeout = 5
+
+	-- Checksum Function
+	function generateCheckSum(data)
+		-- Calculate CheckSum - Sum all bytes in data
+		local cc = 0
+		for i = 1, #data do
+			cc = cc + string.byte(data:sub(i, i))
+		end
+		-- Convert to Hex string
+		cc = string.format("%X", cc)
+		-- Get LSByte of Hex
+		cc = string.sub(cc, -2)
+		-- Convert Hex to Number
+		cc = tonumber(cc, 16)
+		-- Return Result
+		return cc
+	end
+
+	timerTimeout = Timer.New()
+	timerTimeout.EventHandler = function(timer)
+		timer:Stop()
+		conn:Disconnect()
+		Samsung.ConnState = false
+		Controls.ConnectionState.String = Samsung.Host .. ":" .. Samsung.Port .. " Resting"
+	end
+
+	-- Data Sending Helper Function
+	function fnSend(cmd, data)
+		Samsung.Tx = cmd .. "\x01" .. string.pack("B", #data) .. data
+		if Samsung.ConnState == true then
+			fnActualSend()
+		else
+			fnConnect()
+		end
+	end
+
+	function fnActualSend()
+		-- Build Packet
+		local toSend = Samsung.Tx
+		Samsung.Tx = nil
+		-- Send to device
+		conn:Write("\xAA" .. toSend .. string.pack("B", generateCheckSum(toSend)))
+		-- Reset Polling
+		fnInitPoll()
+		-- Reset Timeout
+		timerTimeout:Stop()
+		timerTimeout:Start(5)
+	end
+
+	-- Create and setup Polling
+	timerPoll = Timer.New()
+
+	timerPoll.EventHandler = function(timer)
+		fnPoll()
+	end
+
+	function fnInitPoll()
+		timerPoll:Stop()
+		timerPoll:Start(20)
+	end
+
+	function fnPoll()
+		fnSend("\x00", "")
+	end
+
+	function setCommsState(s)
+		Controls.ConnectionState.String = Samsung.Host .. ":" .. Samsung.Port .. " " .. s
+	end
+
+	-- Setup Utility Callbacks as required
+	conn.Connected = function(conn)
+		--print("TCP socket is connected")
+		setCommsState("Connected")
+		Samsung.ConnState = true
+		fnActualSend()
+	end
+	conn.Reconnect = function(conn)
+		setCommsState("Reconnect")
+		--print("TCP socket is reconnecting")
+	end
+	conn.Closed = function(conn)
+		setCommsState("Closed")
+		--print("TCP socket was closed by the remote end")
+	end
+	conn.Error = function(conn, err)
+		setCommsState("Error")
+		--print("TCP socket had an error:", err)
+	end
+	conn.Timeout = function(conn, err)
+		setCommsState("Timeout")
+		--print("TCP socket timed out", err)
+	end
+
+	-- Helper Function - Open TCP Connection
+	function fnConnect()
+		conn:Connect(Samsung.Host, Samsung.Port)
+		Controls.IPAddress.String = Samsung.Host .. ":" .. Samsung.Port
+		Controls.ConnectionState.String = Samsung.Host .. ":" .. Samsung.Port .. " Connecting"
+	end
+
+	-- Gain Pacing - reduce jitter of display unable to handle blitz of commands by adding pacing
+	local gainPaceVal
+	local gainPacePend = false
+
+	function sendGain()
+		gainPacePend = false -- Indicate timer has ended
+		if gainPaceVal ~= nil then -- If there is a value to send
+			fnSend("\x12", gainPaceVal) -- Actually send Value
+			gainPaceVal = nil -- Clear Value as Sent
+			Timer.CallAfter(sendGain, 0.1) -- Start a timer
+			gainPacePend = true -- Set value to show timer is running
+		end
+	end
+
+	-- Create and setup Source Timer
+	timerSource = Timer.New()
+
+	timerSource.EventHandler = function(timer)
+		timer:Stop()
+		fnSend("\x14", Samsung.requestedSource)
+		Samsung.requestedSource = nil
+	end
+
+	function switchSource(s)
+		Samsung.requestedSource = s
+		if Controls.PowerState.Boolean ~= true then
+			debug("Source Triggered Power On!")
+			fnSend("\x11", "\x01")
+			Controls.PowerState.Boolean = true
+			timerSource:Stop()
+			timerSource:Start(12)
+		else
+			debug("Switch Source")
+			fnSend("\x14", Samsung.requestedSource)
+		end
+	end
+
+	-- Setup Event Handlers
+	for k, v in pairs(Controls) do
+		-- Setup Event Handler (IP Address Pin)
+		if k == "IP Address" then
+			-- Setup Event Handler (Mute)
+			v.EventHandler = function(changedControl)
+				fnConnect()
+			end
+		elseif k == "Mute" then
+			v.EventHandler = function(changedControl)
+				if changedControl.Boolean == true then
+					fnSend("\x13", "\x01") -- Mute ON
+				else
+					fnSend("\x13", "\x00") -- Mute OFF
+				end
+			end
+		elseif k == "Gain" then
+			v.EventHandler = function(changedControl)
+				gainPaceVal = string.pack("B", changedControl.Value)
+				if gainPacePend == false then
+					sendGain() -- Send Value
+				end
+			end
+		elseif k == "PowerOn" then
+			v.EventHandler = function(changedControl)
+				if changedControl.Boolean == true then
+					debug("Pin:Sending PowerOn")
+					fnSend("\x11", "\x01")
+					Controls.PowerState.Boolean = true
+					Samsung.desiredPower = true
+				end
+			end
+		elseif k == "PowerOff" then
+			v.EventHandler = function(changedControl)
+				if changedControl.Boolean == true then
+					debug("Pin:Sending PowerOff")
+					fnSend("\x11", "\x00")
+					Controls.PowerState.Boolean = false
+					Samsung.desiredPower = false
+				end
+			end
+		elseif k:sub(1, #"Source") == "Source" then
+			k = k:sub(#"Source" + 1)
+			v.EventHandler = function(changedControl)
+				if k == "HDMI01" then
+					debug("Pin:Sending HDMI1")
+					Samsung.desiredSource = "\x21"
+				elseif k == "HDMI02" then
+					debug("Pin:Sending HDMI2")
+					Samsung.desiredSource = "\x23"
+				elseif k == "DVI01" then
+					debug("Pin:Sending DVI1")
+					Samsung.desiredSource = "\18"
+				elseif k == "MagicInfo" then
+					debug("Pin:Sending MagicInfo")
+					Samsung.desiredSource = "\x20"
+				end
+				if changedControl.Boolean == true then
+					switchSource(Samsung.desiredSource)
+					Samsung.desiredPower = true
+				end
+			end
+		end
+	end
+
+	-- Create and setup the Communications Timeout
+	timerComms = Timer.New()
+	timerComms.EventHandler = function(timer)
+		timer:Stop()
+		Controls.Online.Boolean = false
+	end
+
+	-- Process Feedback Helper
+	function fnProcessFeedback(data)
+		--print("#data::" .. data)
+		-- Data here is now just the packet ready for processing
+
+		-- Set local boolean from property
+		Force = Properties["Force On High"].Value
+
+		-- Get Ack Status
+		err = data:sub(4, 4)
+		-- Strip $FF & ID & Length & Ack
+		data = data:sub(5)
+		-- Process Status Feedback
+		if string.byte(data:sub(1, 1)) == 0x00 then
+			-- Process Model Number Feedback
+			-- Check to see if this is an error
+			if err == "N" then
+				--print("Status Response - Error")
+			else
+				--print("Status Response - OK")
+				if Controls.PowerState then
+					-- Store Power
+					Controls.PowerState.Boolean = string.byte(data:sub(2, 2)) == 1
+					debug("PowerState Set: " .. tostring(Controls.PowerState.Boolean))
+					debug("desiredPower: " .. tostring(Samsung.desiredPower))
+					-- Set Power state if required
+					if
+						Controls.PowerState.Boolean == false and
+							((Force and Controls.PowerOn.Boolean == true) or Samsung.desiredPower == true)
+					 then
+						fnSend("\x11", "\x01")
+						debug("Force: Sending PowerOn")
+					elseif
+						Controls.PowerState.Boolean == true and
+							((Force and Controls.PowerOff.Boolean == true) or Samsung.desiredPower == false)
+					 then
+						fnSend("\x11", "\x00")
+						debug("Force: Sending PowerOff")
+					 end
+					 Samsung.desiredPower = nil
+					-- Store Audio Gain
+					Controls.Gain.Value = string.byte(data:sub(3, 3))
+					-- Store Audio Mute
+					Controls.Mute.Boolean = string.byte(data:sub(4, 4)) == 1
+					-- Store Source
+					Controls.SourceActive.Value = string.byte(data:sub(5, 5))
+					-- Set power on if required by source and not actually on
+					PowerRequired =
+						(Samsung.desiredSource ~= nil or
+						(Force and
+							(Controls.SourceHDMI01.Boolean or Controls.SourceHDMI02.Boolean or Controls.SourceDVI01.Boolean or
+								Controls.SourceMagicInfo.Boolean)))
+					if PowerRequired == true and Controls.PowerState.Boolean == false then
+						print("Force: Source wants PowerOn")
+						fnSend("\x11", "\x01")
+						Samsung.desiredPower = true
+					else
+						if
+							(Controls.SourceActive.Value ~= 33 and
+								((Force and Controls.SourceHDMI01.Boolean == true) or Samsung.desiredSource == "\x21"))
+						 then
+							print("Force: Sending Source HDMI01")
+							fnSend("\x14", "\x21")
+						elseif
+							(Controls.SourceActive.Value ~= 35 and
+								((Force and Controls.SourceHDMI02.Boolean == true) or Samsung.desiredSource == "\x23"))
+						 then
+							print("Force: Sending Source HDMI02")
+							fnSend("\x14", "\x23")
+						elseif
+							(Controls.SourceActive.Value ~= 31 and
+								((Force and Controls.SourceDVI01.Boolean == true) or Samsung.desiredSource == "\x18"))
+						 then
+						elseif Controls.SourceDVI01.Boolean == true and Controls.SourceActive.Value ~= 31 then
+							print("Force: Sending Source DVI01")
+							fnSend("\x14", "\x18")
+						elseif
+							(Controls.SourceActive.Value ~= 30 and
+								((Force and Controls.SourceMagicInfo.Boolean == true) or Samsung.desiredSource == "\x20"))
+						 then
+							print("Force: Sending Source MagicInfo")
+							fnSend("\x14", "\x20")
+						end
+						Samsung.desiredSource = nil
+					end
+				end
+			end
+			-- Request MetaData - Model Name
+			fnSend("\x8A", "")
+		elseif string.byte(data:sub(1, 1)) == 0x8A then
+			-- Process Serial Number Feedback
+			-- Check to see if this is an error
+			if err == "N" then
+				--print("MN Response - Error")
+			else
+				--
+				--print("MN Response - [" .. data:sub(2) .. "]")
+				--if Controls.Model then
+				Controls.Model.String = data:sub(2)
+			end
+			-- Request MetaData - Serial Number
+			fnSend("\x0B", "")
+		elseif string.byte(data:sub(1, 1)) == 0x0B then
+			-- Process Display State Feedback
+			-- Check to see if this is an error
+			if err == "N" then
+				--print("SN Response - Error")
+			else
+				--print("SN Response - [" .. data:sub(2, 15) .. "]")
+				if Controls.SerialNumber then
+					Controls.SerialNumber.String = data:sub(2, 15)
+				end
+			end
+			-- Request MetaData - Display Status
+			fnSend("\x0D", "")
+		elseif string.byte(data:sub(1, 1)) == 0x0D then
+			-- Check to see if this is an error
+			if err == "N" then
+				--print("DS Response - Error")
+			else
+				-- 1: Lamp
+				-- 2: Temperature (Boolean)
+				-- 3: Bright_Sensor
+				-- 4: No_Sync
+				-- 5: Cur_Temp (0-125C)
+				-- 6: FAN
+				--print("DS Response - Temp=" .. string.byte(data:sub(6, 6)))
+				if Controls.Temperature then
+					Controls.Temperature.Value = string.byte(data:sub(6, 6))
+				end
+			end
+			-- Request MetaData - Software Version
+			fnSend("\x0E", "")
+		elseif string.byte(data:sub(1, 1)) == 0x0E then
+			-- Check to see if this is an error
+			if err == "N" then
+				--print("SW Response - Error")
+			else
+				--print("SW Response - [" .. data:sub(2) .. "]")
+				if Controls.SoftwareVersion then
+					Controls.SoftwareVersion.String = data:sub(2)
+				end
+			end
+		-- Request MetaData - More
+		--fnSend("\xXX","")
+		end
+	end
+
+	-- Setup Data Callbacks as required
+	conn.Data = function(conn)
+		raw = conn:Read(conn.BufferLength)
+		--print("TCP socket Recieved " .. #raw .. " bytes")
+		-- Add to Buffer
+		Samsung.Rx = Samsung.Rx .. raw
+		-- Strip off any Garbage if it has made it in somehow
+		while Samsung.Rx:find("\xAA") do
+			-- Remove anything ahead of the STX that shouldn't be there
+			x, y = Samsung.Rx:find("\xAA")
+			Samsung.Rx = Samsung.Rx:sub(x)
+			-- Check for a complete message
+			len = string.byte(Samsung.Rx:sub(4, 5))
+			if #Samsung.Rx < len + 5 then
+				break
+			end
+			-- Grab the full packet
+			packet = Samsung.Rx:sub(1, len + 5)
+			-- Remove packet from buffer
+			Samsung.Rx = Samsung.Rx:sub(len + 5 + 1)
+			-- Send to function without STX or ChkSum
+			fnProcessFeedback(packet:sub(2, -2))
+		end
+		--
+
+		-- Stop and restart Comms timer
+		timerComms:Stop()
+		if Controls.Online then -- Check for when developing in a Control Script block
+			Controls.Online.Boolean = true
+		end
+		timerComms:Start(30)
+	end
+
+	-- Set IP address from Properties if present
+	if Properties then
+		if Properties["IP Address"].Value ~= "" then
+			Samsung.Host = Properties["IP Address"].Value
+			fnPoll()
+		else
+			print("IP Address Property Not Set")
+		end
+	end
+end
