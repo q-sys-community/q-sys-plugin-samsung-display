@@ -3,10 +3,10 @@
 -- For source, contact https://soloworks.co.uk
 
 PluginInfo = {
-	Name = "Samsung~Commercial Display", -- The tilde here indicates folder structure in the Shematic Elements pane
-	Version = "0.1",
-	Id = "SoloWorks.Samsung.CommercialDisplay", -- show this is just a unique id. Show some commented out 'fun' unique ids
-	Description = "Control for Samsung range of Commercial Displays (All models)",
+	Name = "Samsung~Commercial Display (0.0.0.0-master)", -- The tilde here indicates folder structure in the Shematic Elements pane
+	Version = "0.0.0.0-master",
+	Id = "qsysc.samsung.display.0.0.0.0-master", -- show this is just a unique id. Show some commented out 'fun' unique ids
+	Description = "Control for Samsung range of Displays",
 	ShowDebug = true,
 	Author = "Solo Works London"
 }

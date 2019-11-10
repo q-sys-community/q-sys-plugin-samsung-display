@@ -1,21 +1,20 @@
 <?xml version="1.0"?>
-<!-- Initially generated manually using `nuget spec`-->
 <package >
   <metadata>
-    <id>Samsung-Commercial-Display</id>
+    <id>Samsung-Display</id>
     <version>0.0.0.0-master</version>
-    <title>Samsung Commercial Display</title>
-    <authors>Sam Shelton</authors>
-    <owners>Solo Works London</owners>
+    <title>Samsung Display</title>
+    <authors>Solo Works London</authors>
+    <owners>Q-Sys Community</owners>
     <license type="expression">GPL-3.0-or-later</license>
-    <projectUrl>https://github.com/q-sys-community/q-sys-plugin-samsung-commercial-display</projectUrl>
-    <iconUrl>http://content/images/samsung-logo.png</iconUrl>
+    <projectUrl>https://github.com/q-sys-community/q-sys-plugin-samsung-display</projectUrl>
+    <iconUrl>http://content/images/samsung-logo-128px.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Package description</description>
     <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
     <copyright>Copyright 2019</copyright>
     <tags>Samsung Display</tags>
-    <summary>A control plugin for Samsung commercial displays</summary>
+    <summary>A control plugin for Samsung displays</summary>
   </metadata>
   <files>
     <file src="content\*" target="" />

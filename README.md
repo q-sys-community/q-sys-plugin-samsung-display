@@ -1,2 +1,3 @@
-# q-sys-plugin-samsung-commercial-display
-QSC Q-Sys plugin for Samsung commercial displays
+# q-sys-plugin-samsung-display
+
+QSC Q-Sys plugin for Samsung displays
