@@ -705,7 +705,7 @@ if Controls then
 					Samsung.desiredSource = "\x23"
 				elseif k == "DVI01" then
 					debug("Pin:Sending DVI1")
-					Samsung.desiredSource = "\18"
+					Samsung.desiredSource = "\x18"
 				elseif k == "MagicInfo" then
 					debug("Pin:Sending MagicInfo")
 					Samsung.desiredSource = "\x20"
