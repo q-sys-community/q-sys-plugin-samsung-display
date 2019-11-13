@@ -697,20 +697,20 @@ if Controls then
 		elseif k:sub(1, #"Source") == "Source" then
 			k = k:sub(#"Source" + 1)
 			v.EventHandler = function(changedControl)
-				if k == "HDMI01" then
-					debug("Pin:Sending HDMI1")
-					Samsung.desiredSource = "\x21"
-				elseif k == "HDMI02" then
-					debug("Pin:Sending HDMI2")
-					Samsung.desiredSource = "\x23"
-				elseif k == "DVI01" then
-					debug("Pin:Sending DVI1")
-					Samsung.desiredSource = "\x18"
-				elseif k == "MagicInfo" then
-					debug("Pin:Sending MagicInfo")
-					Samsung.desiredSource = "\x20"
-				end
 				if changedControl.Boolean == true then
+					if k == "HDMI01" then
+						debug("Pin:Sending HDMI1")
+						Samsung.desiredSource = "\x21"
+					elseif k == "HDMI02" then
+						debug("Pin:Sending HDMI2")
+						Samsung.desiredSource = "\x23"
+					elseif k == "DVI01" then
+						debug("Pin:Sending DVI1")
+						Samsung.desiredSource = "\x18"
+					elseif k == "MagicInfo" then
+						debug("Pin:Sending MagicInfo")
+						Samsung.desiredSource = "\x20"
+					end
 					switchSource(Samsung.desiredSource)
 					Samsung.desiredPower = true
 				end
@@ -763,8 +763,8 @@ if Controls then
 					 then
 						fnSend("\x11", "\x00")
 						debug("Force: Sending PowerOff")
-					 end
-					 Samsung.desiredPower = nil
+					end
+					Samsung.desiredPower = nil
 					-- Store Audio Gain
 					Controls.Gain.Value = string.byte(data:sub(3, 3))
 					-- Store Audio Mute
