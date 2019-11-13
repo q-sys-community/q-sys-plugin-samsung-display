@@ -1,4 +1,4 @@
-name: Deploy
+name: Publish Q-Sys Plugin
 
 on:
   push:
@@ -6,39 +6,16 @@ on:
     - '*'
 
 jobs:
-  build:
+  pack-and-push-job:
+    runs-on: ubuntu-latest
+    name: Package and Publish plugin to Q-Sys Community Server
+    steps:
+      - name: Checkout Files
+        uses: actions/checkout@v1
 
-    runs-on: windows-latest
-
-    steps:  
-    # Copy in source files 
-    - name: Pull Source Files
-      uses: actions/checkout@v1
-
-    # Ammed LUA code with tagged version number
-    - name: Update version in .qplug file
-      run: |
-        $TAG = $Env:GITHUB_REF.Replace("refs/tags/","")
-        # Will get exactly the first instance of a .qplug file
-        $QPLUG = (Get-ChildItem -Path "content" -Include *.qplug -Force -Recurse -File | Select-Object -First 1).Name
-        ((Get-Content -path content\$QPLUG -Raw) -replace '0.0.0.0-master',$TAG) | Set-Content content\$QPLUG
-  
-    # Download go-nuget executable (1.2.0)
-    - name: Download go-nuget (1.2.0)
-      run: |
-        Invoke-WebRequest -Uri https://github.com/soloworks/go-nuget/releases/download/v1.2.0/go-nuget_1.2.0_Windows_x86_64.zip -OutFile go-nuget.zip
-        Expand-Archive .\go-nuget.zip
-  
-    # Pack up package
-    - name: Pack with go-nuget
-      run: |
-        $NUSPEC = (Get-ChildItem -Path "." -Include *.nuspec -Force -Recurse -File | Select-Object -First 1).Name
-        go-nuget\go-nuget pack $NUSPEC -Version $Env:GITHUB_REF.Replace("refs/tags/","")
-  
-    # Push package to server
-    - name: Push with go-nuget
-      env: # Or as an environment variable
-        NUGET_APIKEY: ${{ secrets.NUGET_APIKEY }}
-      run: |
-        $NUPKG = (Get-ChildItem -Path "." -Include *.nupkg -Force -Recurse -File | Select-Object -First 1).Name
-        go-nuget\go-nuget push $NUPKG -Source "https://q-sys.soloworks.co.uk/q-sys-community-plugins/" -ApiKey $Env:NUGET_APIKEY
+      - name: Pack and Push
+        uses: soloworks/publish-q-sys-plugin@v1
+        with:
+          nuget-host: "https://q-sys.soloworks.co.uk/q-sys-community-plugins/"
+          api-key: ${{ secrets.NUGET_APIKEY }}
+          md-to-desc: "description.md"
