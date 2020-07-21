@@ -152,6 +152,30 @@ function GetControls(props)
 			Count = 1,
 			UserPin = true
 		},
+		{
+			Name = "BlankOn",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Input",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "BlankOff",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Input",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "BlankState",
+			ControlType = "Indicator",
+			IndicatorType = "Led",
+			PinStyle = "Output",
+			Count = 1,
+			UserPin = true
+		},
 		-- Source
 		{
 			Name = "SourceActive",
@@ -388,7 +412,7 @@ function GetControlLayout(props)
 		}
 	)
 
-	-- Source & Power State
+	-- Video Power State
 	x, y = 0, 270
 	layout["PowerState"] = {
 		PrettyName = "Display~Power State",
@@ -398,12 +422,6 @@ function GetControlLayout(props)
 		UnlinkOffColor = false,
 		Position = {x + 50, y},
 		Size = {20, 20}
-	}
-	layout["SourceActive"] = {
-		PrettyName = "Display~Source Active",
-		Style = "Fader",
-		Position = {x + 100, y},
-		Size = {36, 16}
 	}
 	layout["PowerOn"] = {
 		Legend = "On",
@@ -425,6 +443,74 @@ function GetControlLayout(props)
 		Position = {x + 35, y + 20},
 		Size = {30, 30}
 	}
+	table.insert(
+		graphics,
+		{
+			Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
+			Text = "Power",
+			HTextAlign = "Left",
+			Fill = Colors.White,
+			CornerRadius = 8,
+			StrokeColor = Colors.Black,
+			StrokeWidth = 1,
+			Position = {x, y},
+			Size = {120, 55} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
+		}
+	)
+
+	-- Video Blank State
+	x, y = 125, 270
+	layout["BlankState"] = {
+		PrettyName = "Display~Blank State",
+		Style = "Indicator",
+		OffColor = {0, 0, 0},
+		Color = {0, 255, 0},
+		UnlinkOffColor = false,
+		Position = {x + 50, y},
+		Size = {20, 20}
+	}
+	layout["BlankOn"] = {
+		Legend = "On",
+		PrettyName = "Display~Blank On",
+		Style = "Button",
+		ButtonStyle = "Momentary",
+		Color = {223, 0, 36},
+		UnlinkOffColor = false,
+		Position = {x + 10, y + 20},
+		Size = {30, 30}
+	}
+	layout["BlankOff"] = {
+		Legend = "Off",
+		PrettyName = "Display~Blank Off",
+		Style = "Button",
+		ButtonStyle = "Momentary",
+		Color = {223, 0, 36},
+		UnlinkOffColor = false,
+		Position = {x + 40, y + 20},
+		Size = {30, 30}
+	}
+	table.insert(
+		graphics,
+		{
+			Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
+			Text = "Blank",
+			HTextAlign = "Left",
+			Fill = Colors.White,
+			CornerRadius = 8,
+			StrokeColor = Colors.Black,
+			StrokeWidth = 1,
+			Position = {x + 5, y},
+			Size = {120, 55} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
+		}
+	)
+	-- Source & Power State
+	x, y = 0, 335
+	layout["SourceActive"] = {
+		PrettyName = "Display~Source Active",
+		Style = "Fader",
+		Position = {x + 100, y},
+		Size = {36, 16}
+	}
 	layout["SourceHDMI01"] = {
 		Legend = "HDMI1",
 		PrettyName = "Display~HDMI 1",
@@ -432,7 +518,7 @@ function GetControlLayout(props)
 		ButtonStyle = "Momentary",
 		Color = {223, 0, 36},
 		UnlinkOffColor = false,
-		Position = {x + 80, y + 20},
+		Position = {x + 5, y + 20},
 		Size = {40, 30}
 	}
 	layout["SourceHDMI02"] = {
@@ -442,7 +528,7 @@ function GetControlLayout(props)
 		ButtonStyle = "Momentary",
 		Color = {223, 0, 36},
 		UnlinkOffColor = false,
-		Position = {x + 120, y + 20},
+		Position = {x + 45, y + 20},
 		Size = {40, 30}
 	}
 	layout["SourceDVI01"] = {
@@ -452,7 +538,7 @@ function GetControlLayout(props)
 		ButtonStyle = "Momentary",
 		Color = {223, 0, 36},
 		UnlinkOffColor = false,
-		Position = {x + 160, y + 20},
+		Position = {x + 85, y + 20},
 		Size = {40, 30}
 	}
 	layout["SourceMagicInfo"] = {
@@ -462,7 +548,7 @@ function GetControlLayout(props)
 		ButtonStyle = "Momentary",
 		Color = {223, 0, 36},
 		UnlinkOffColor = false,
-		Position = {x + 200, y + 20},
+		Position = {x + 125, y + 20},
 		Size = {40, 30}
 	}
 	table.insert(
@@ -497,6 +583,7 @@ if Controls then
 		--Host = "127.0.0.1",
 		Port = 1515,
 		Rx = "",
+		desiredBlank = nil,
 		desiredPower = nil,
 		desiredSource = nil,
 		Tx = nil,
@@ -642,13 +729,13 @@ if Controls then
 	function switchSource(s)
 		Samsung.requestedSource = s
 		if Controls.PowerState.Boolean ~= true then
-			debug("Source Triggered Power On!")
+			debug("Switch Source: Request Power On")
 			fnSend("\x11", "\x01")
 			Controls.PowerState.Boolean = true
 			timerSource:Stop()
 			timerSource:Start(12)
 		else
-			debug("Switch Source")
+			debug("Switch Source: Switching")
 			fnSend("\x14", Samsung.requestedSource)
 		end
 	end
@@ -694,6 +781,24 @@ if Controls then
 					Samsung.desiredPower = false
 				end
 			end
+		elseif k == "BlankOn" then
+			v.EventHandler = function(changedControl)
+				if changedControl.Boolean == true then
+					debug("Pin:Sending BlankOn")
+					fnSend("\xB4", "\x00\x01")
+					Controls.BlankState.Boolean = true
+					Samsung.desiredBlank = true
+				end
+			end
+		elseif k == "BlankOff" then
+			v.EventHandler = function(changedControl)
+				if changedControl.Boolean == true then
+					debug("Pin:Sending BlankOff")
+					fnSend("\xB4", "\x00\x00")
+					Controls.BlankState.Boolean = false
+					Samsung.desiredBlank = false
+				end
+			end
 		elseif k:sub(1, #"Source") == "Source" then
 			k = k:sub(#"Source" + 1)
 			v.EventHandler = function(changedControl)
@@ -727,7 +832,7 @@ if Controls then
 
 	-- Process Feedback Helper
 	function fnProcessFeedback(data)
-		--print("#data::" .. data)
+		-- print("#data::" .. data)
 		-- Data here is now just the packet ready for processing
 
 		-- Set local boolean from property
@@ -748,8 +853,8 @@ if Controls then
 				if Controls.PowerState then
 					-- Store Power
 					Controls.PowerState.Boolean = string.byte(data:sub(2, 2)) == 1
-					debug("PowerState Set: " .. tostring(Controls.PowerState.Boolean))
-					debug("desiredPower: " .. tostring(Samsung.desiredPower))
+					-- debug("PowerState Set: " .. tostring(Controls.PowerState.Boolean))
+					-- debug("desiredPower: " .. tostring(Samsung.desiredPower))
 					-- Set Power state if required
 					if
 						Controls.PowerState.Boolean == false and
@@ -859,6 +964,8 @@ if Controls then
 			-- Request MetaData - Software Version
 			fnSend("\x0E", "")
 		elseif string.byte(data:sub(1, 1)) == 0x0E then
+			-- Request MetaData - Screen Blank
+			-- fnSend("\xB4","")
 			-- Check to see if this is an error
 			if err == "N" then
 				--print("SW Response - Error")
@@ -868,8 +975,18 @@ if Controls then
 					Controls.SoftwareVersion.String = data:sub(2)
 				end
 			end
-		-- Request MetaData - More
-		--fnSend("\xXX","")
+			-- Request MetaData - Screen Blank
+			fnSend("\xB4", "")
+		elseif string.byte(data:sub(1, 1)) == 0xB4 then
+			-- Check to see if this is an error
+			if err == "N" then
+				--print("Screen Blank Response - Error")
+			else
+				--print("Screen Blank Response - [" .. data:sub(2) .. "]")
+				if Controls.BlankState then
+					Controls.BlankState.Boolean = string.byte(data:sub(2)) == 1
+				end
+			end
 		end
 	end
 
