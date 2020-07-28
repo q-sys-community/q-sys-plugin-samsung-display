@@ -216,6 +216,47 @@ function GetControls(props)
 			PinStyle = "Input",
 			Count = 1,
 			UserPin = true
+		},
+		-- Pattern Display
+		{
+			Name = "PatternDisplayActive",
+			ControlType = "Knob",
+			ControlUnit = "Integer",
+			PinStyle = "Output",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "PatternDisplayBlack100",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Input",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "PatternDisplayBlack50",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Input",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "PatternDisplayRotatingRGBW",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Input",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "PatternDisplayOff",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Input",
+			Count = 1,
+			UserPin = true
 		}
 	}
 	return ctls
@@ -503,7 +544,7 @@ function GetControlLayout(props)
 			Size = {120, 55} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
 		}
 	)
-	-- Source & Power State
+	-- Source State
 	x, y = 0, 335
 	layout["SourceActive"] = {
 		PrettyName = "Display~Source Active",
@@ -566,6 +607,69 @@ function GetControlLayout(props)
 		}
 	)
 
+	-- Test Pattern State
+	x, y = 0, 400
+	layout["PatternDisplayActive"] = {
+		PrettyName = "Pattern~Current",
+		Style = "Fader",
+		Position = {x + 100, y},
+		Size = {36, 16}
+	}
+	layout["PatternDisplayBlack100"] = {
+		Legend = "Black 100%",
+		PrettyName = "Pattern~Black 100%",
+		Style = "Button",
+		ButtonStyle = "Momentary",
+		Color = {223, 0, 36},
+		UnlinkOffColor = false,
+		Position = {x + 5, y + 20},
+		Size = {40, 30}
+	}
+	layout["PatternDisplayBlack50"] = {
+		Legend = "Black 50%",
+		PrettyName = "Pattern~Black 50%",
+		Style = "Button",
+		ButtonStyle = "Momentary",
+		Color = {223, 0, 36},
+		UnlinkOffColor = false,
+		Position = {x + 45, y + 20},
+		Size = {40, 30}
+	}
+	layout["PatternDisplayRotatingRGBW"] = {
+		Legend = "Rotating RGBW",
+		PrettyName = "Pattern~Rotating RGBW",
+		Style = "Button",
+		ButtonStyle = "Momentary",
+		Color = {223, 0, 36},
+		UnlinkOffColor = false,
+		Position = {x + 85, y + 20},
+		Size = {40, 30}
+	}
+	layout["PatternDisplayOff"] = {
+		Legend = "Off",
+		PrettyName = "Pattern~Off",
+		Style = "Button",
+		ButtonStyle = "Momentary",
+		Color = {223, 0, 36},
+		UnlinkOffColor = false,
+		Position = {x + 125, y + 20},
+		Size = {40, 30}
+	}
+	table.insert(
+		graphics,
+		{
+			Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
+			Text = "Pattern Display",
+			HTextAlign = "Left",
+			Fill = Colors.White,
+			CornerRadius = 8,
+			StrokeColor = Colors.Black,
+			StrokeWidth = 1,
+			Position = {x, y},
+			Size = {250, 55} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
+		}
+	)
+
 	return layout, graphics
 end
 
@@ -579,8 +683,7 @@ end
 if Controls then
 	-- Local Structure for holding State
 	Samsung = {
-		Host = "192.168.2.185",
-		--Host = "127.0.0.1",
+		Host = "127.0.0.1",
 		Port = 1515,
 		Rx = "",
 		desiredBlank = nil,
@@ -785,7 +888,7 @@ if Controls then
 			v.EventHandler = function(changedControl)
 				if changedControl.Boolean == true then
 					debug("Pin:Sending BlankOn")
-					fnSend("\xB4", "\x00\x01")
+					fnSend("\xB4", "\x00\x01") -- Screen Mute
 					Controls.BlankState.Boolean = true
 					Samsung.desiredBlank = true
 				end
@@ -794,7 +897,7 @@ if Controls then
 			v.EventHandler = function(changedControl)
 				if changedControl.Boolean == true then
 					debug("Pin:Sending BlankOff")
-					fnSend("\xB4", "\x00\x00")
+					fnSend("\xB4", "\x00\x00") -- Screen Mute
 					Controls.BlankState.Boolean = false
 					Samsung.desiredBlank = false
 				end
@@ -817,6 +920,27 @@ if Controls then
 						Samsung.desiredSource = "\x20"
 					end
 					switchSource(Samsung.desiredSource)
+					Samsung.desiredPower = true
+				end
+			end
+		elseif k:sub(1, #"PatternDisplay") == "PatternDisplay" then
+			k = k:sub(#"PatternDisplay" + 1)
+			v.EventHandler = function(changedControl)
+				if changedControl.Boolean == true then
+					if k == "Black100" then
+						debug("Pin:Sending Pattern Display Black 100%")
+						fnSend("\xFE", "\x51\x00") -- Test Pattern
+					elseif k == "Black50" then
+						debug("Pin:Sending Pattern Display Black 50%")
+						fnSend("\xFE", "\x51\x05") -- Test Pattern
+					elseif k == "RotatingRGBW" then
+						debug("Pin:Sending Pattern Display Rotating RGBW")
+						fnSend("\xFE", "\x51\x40") -- Test Pattern
+					elseif k == "Off" then
+						debug("Pin:Sending Pattern Display Off")
+						fnSend("\xFE", "\x51\xFF") -- Test Pattern
+					end
+
 					Samsung.desiredPower = true
 				end
 			end
@@ -964,8 +1088,6 @@ if Controls then
 			-- Request MetaData - Software Version
 			fnSend("\x0E", "")
 		elseif string.byte(data:sub(1, 1)) == 0x0E then
-			-- Request MetaData - Screen Blank
-			-- fnSend("\xB4","")
 			-- Check to see if this is an error
 			if err == "N" then
 				--print("SW Response - Error")
@@ -985,6 +1107,18 @@ if Controls then
 				--print("Screen Blank Response - [" .. data:sub(2) .. "]")
 				if Controls.BlankState then
 					Controls.BlankState.Boolean = string.byte(data:sub(2)) == 1
+				end
+			end
+			-- Request MetaData - Test Pattern
+			fnSend("\xFE", "0x51")
+		elseif string.byte(data:sub(1, 1)) == 0xFE then
+			-- Check to see if this is an error
+			if err == "N" then
+				--print("Test Pattern Response - Error")
+			else
+				--print("Test Pattern Response - [" .. data:sub(3) .. "]")
+				if Controls.PatternDisplay then
+					Controls.PatternDisplay.Value = string.byte(data:sub(3)) == 1
 				end
 			end
 		end
