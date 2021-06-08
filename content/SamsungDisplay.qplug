@@ -13,11 +13,16 @@ PluginInfo = {
 
 -- Once you've drawn your plugin in Designer, you can determine what colors you use a lot. Save yourself some time by putting them in a table, and then simply calling them later.
 local Colors = {
+	samsung_blue = {3, 78, 162},
 	White = {255, 255, 255},
 	Black = {0, 0, 0},
 	Red = {255, 0, 0},
 	Green = {0, 255, 0}
 }
+
+function GetColor(props)
+	return Colors.samsung_blue
+end
 
 -- We can let users determine some of the plugin properties by exposing them here
 -- While this function can be very useful, it is completely optional and not always needed.
@@ -92,7 +97,7 @@ function GetControls(props)
 			UserPin = true
 		},
 		{
-			Name = "SoftwareVersion",
+			Name = "FirmwareVersion",
 			ControlType = "Indicator",
 			IndicatorType = "Text",
 			PinStyle = "Output",
@@ -183,7 +188,7 @@ function GetControls(props)
 			ControlUnit = "Integer",
 			PinStyle = "Output",
 			Count = 1,
-			UserPin = true
+			UserPin = false
 		},
 		{
 			Name = "SourceHDMI01",
@@ -224,7 +229,7 @@ function GetControls(props)
 			ControlUnit = "Integer",
 			PinStyle = "Output",
 			Count = 1,
-			UserPin = true
+			UserPin = false
 		},
 		{
 			Name = "PatternDisplayBlack100",
@@ -263,108 +268,73 @@ function GetControls(props)
 end
 
 -- Variable holding Page Names for ease
-local pagenames = {"Display"}
+local pagenames = {"Display", "Audio"}
 
 -- This function allows you to populate pages in your plugin.
 function GetPages(props)
 	pages = {}
-	table.insert(pages, {name = pagenames[1]})
+	for ix, name in ipairs(pagenames) do
+		table.insert(pages, {name = pagenames[ix]})
+	end
 	return pages
 end
 
 -- This function allows you to layout pages in your plugin.
 function GetControlLayout(props)
 	local layout = {}
-	local graphics = {}
 
-	local x, y = 0, 0
+	local current_page = pagenames[props["page_index"].Value]
+	local btn_size = {40, 24}
+	local title_size = {7 * btn_size[1], 32}
+	local status_groupbox_size = {title_size[1], 7 * btn_size[2]}
+	local display_groupbox_position = {0, title_size[2] + status_groupbox_size[2] + (0.5 * btn_size[2])}
+	local display_groupbox_size = {title_size[1], 5 * btn_size[2]}
+	local audio_groupbox_position = display_groupbox_position
+	local audio_groupbox_size = {title_size[1], 3 * btn_size[2]}
 
-	-- System & Connection System
-	layout["Online"] = {
-		PrettyName = "System~Online",
-		Style = "Indicator",
-		Color = {0, 255, 0},
-		Position = {x + 3, y + 25},
-		Size = {25, 25}
-	}
-	layout["ConnectionState"] = {
-		Style = "Text",
-		HTextAlign = "Left",
-		Padding = 5,
-		StrokeWidth = 0,
-		Position = {x + 35, y + 25},
-		Size = {200, 25}
-	}
-	table.insert(
-		graphics,
+	graphics = {
+		{
+			Type = "Header",
+			Text = "Samsung Display",
+			HTextAlign = "Center",
+			Color = Colors.samsung_blue,
+			FontSize = 16,
+			Position = {0, 0},
+			Size = title_size
+		},
 		{
 			Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
-			Text = "Connection",
+			Text = "Status",
 			HTextAlign = "Left",
 			Fill = Colors.White,
 			CornerRadius = 8,
-			StrokeColor = Colors.Black,
+			StrokeColor = Colors.samsung_blue,
 			StrokeWidth = 1,
-			Position = {x, y},
-			Size = {250, 60} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
-		}
-	)
-
-	-- Meta Data Infomation
-	x, y = 0, 70
-	layout["Model"] = {
-		PrettyName = "System~Model Name",
-		Style = "Text",
-		HTextAlign = "Left",
-		Padding = 5,
-		StrokeWidth = 0,
-		Position = {x + 100, y + 25},
-		Size = {125, 20}
-	}
-	layout["SerialNumber"] = {
-		PrettyName = "System~Serial Number",
-		Style = "Text",
-		HTextAlign = "Left",
-		Padding = 5,
-		StrokeWidth = 0,
-		Position = {x + 100, y + 50},
-		Size = {125, 20}
-	}
-	layout["SoftwareVersion"] = {
-		PrettyName = "System~Software Version",
-		Style = "Text",
-		HTextAlign = "Left",
-		Padding = 5,
-		StrokeWidth = 0,
-		Position = {x + 100, y + 75},
-		Size = {125, 20}
-	}
-	layout["Temperature"] = {
-		PrettyName = "System~Temperature",
-		Style = "Text",
-		HTextAlign = "Left",
-		Padding = 5,
-		StrokeWidth = 0,
-		Color = {223, 0, 36},
-		Position = {x + 100, y + 100},
-		Size = {125, 20}
-	}
-	table.insert(
-		graphics,
+			Position = {0, title_size[2]},
+			Size = status_groupbox_size -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
+		},
 		{
-			Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
-			Text = "Hardware",
-			HTextAlign = "Left",
-			Fill = Colors.White,
-			CornerRadius = 8,
-			StrokeColor = Colors.Black,
-			StrokeWidth = 1,
-			Position = {x, y},
-			Size = {250, 125} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
-		}
-	)
-	table.insert(
-		graphics,
+			Type = "Text",
+			Text = "Online:",
+			Font = "Roboto",
+			FontSize = 12,
+			FontStyle = "Bold",
+			HTextAlign = "Right",
+			Color = Colors.Black,
+			Position = {0, title_size[2] + (0.5 * btn_size[2])},
+			Size = {3 * btn_size[1], btn_size[2]}
+		},
+		{
+			Type = "Text",
+			Text = "IP Address:",
+			Font = "Roboto",
+			FontSize = 12,
+			FontStyle = "Bold",
+			HTextAlign = "Right",
+			Color = Colors.Black,
+			Position = {0, title_size[2] + (1.5 * btn_size[2])},
+			Size = {3 * btn_size[1], btn_size[2]}
+		},
 		{
 			Type = "Text",
 			Text = "Model:",
@@ -373,12 +343,9 @@ function GetControlLayout(props)
 			FontStyle = "Bold",
 			HTextAlign = "Right",
 			Color = Colors.Black,
-			Position = {x + 10, y + 25},
-			Size = {85, 20}
-		}
-	)
-	table.insert(
-		graphics,
+			Position = {0, title_size[2] + (2.5 * btn_size[2])},
+			Size = {3 * btn_size[1], btn_size[2]}
+		},
 		{
 			Type = "Text",
 			Text = "Serial No:",
@@ -387,12 +354,9 @@ function GetControlLayout(props)
 			FontStyle = "Bold",
 			HTextAlign = "Right",
 			Color = Colors.Black,
-			Position = {x + 10, y + 50},
-			Size = {85, 20}
-		}
-	)
-	table.insert(
-		graphics,
+			Position = {0, title_size[2] + (3.5 * btn_size[2])},
+			Size = {3 * btn_size[1], btn_size[2]}
+		},
 		{
 			Type = "Text",
 			Text = "Firmware:",
@@ -401,12 +365,9 @@ function GetControlLayout(props)
 			FontStyle = "Bold",
 			HTextAlign = "Right",
 			Color = Colors.Black,
-			Position = {x + 10, y + 75},
-			Size = {85, 20}
-		}
-	)
-	table.insert(
-		graphics,
+			Position = {0, title_size[2] + (4.5 * btn_size[2])},
+			Size = {3 * btn_size[1], btn_size[2]}
+		},
 		{
 			Type = "Text",
 			Text = "Temperature:",
@@ -415,260 +376,323 @@ function GetControlLayout(props)
 			FontStyle = "Bold",
 			HTextAlign = "Right",
 			Color = Colors.Black,
-			Position = {x + 10, y + 100},
-			Size = {85, 20}
+			Position = {0, title_size[2] + (5.5 * btn_size[2])},
+			Size = {3 * btn_size[1], btn_size[2]}
 		}
-	)
-
-	-- Audio State
-	x, y = 0, 205
-	layout["Gain"] = {
-		PrettyName = "Audio~Gain",
-		Style = "Fader",
-		Position = {x + 50, y + 20},
-		Size = {180, 30}
 	}
-	layout["Mute"] = {
-		Legend = "Mute",
-		PrettyName = "Audio~Mute",
-		Style = "Button",
-		ButtonStyle = "Toggle",
-		Color = {223, 0, 36},
-		UnlinkOffColor = false,
-		Position = {x + 5, y + 20},
-		Size = {30, 30}
-	}
-	table.insert(
-		graphics,
-		{
-			Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
-			Text = "Audio",
-			HTextAlign = "Left",
-			Fill = Colors.White,
-			CornerRadius = 8,
-			StrokeColor = Colors.Black,
-			StrokeWidth = 1,
-			Position = {x, y},
-			Size = {250, 55} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
-		}
-	)
 
-	-- Video Power State
-	x, y = 0, 270
-	layout["PowerState"] = {
-		PrettyName = "Display~Power State",
+	-- System & Connection System
+	layout["Online"] = {
+		PrettyName = "System~Online",
 		Style = "Indicator",
-		OffColor = {0, 0, 0},
 		Color = {0, 255, 0},
-		UnlinkOffColor = false,
-		Position = {x + 50, y},
-		Size = {20, 20}
+		Position = {(3 * btn_size[1]) + ((btn_size[1] - btn_size[2]) / 2), title_size[2] + (0.5 * btn_size[2])},
+		Size = {btn_size[2], btn_size[2]}
 	}
-	layout["PowerOn"] = {
-		Legend = "On",
-		PrettyName = "Display~Power On",
-		Style = "Button",
-		ButtonStyle = "Momentary",
+	layout["ConnectionState"] = {
+		Style = "Text",
+		HTextAlign = "Left",
+		Padding = 5,
+		StrokeWidth = 1,
+		Position = {3 * btn_size[1], title_size[2] + (1.5 * btn_size[2])},
+		Size = {3 * btn_size[1], btn_size[2]}
+	}
+	layout["Model"] = {
+		PrettyName = "System~Model Name",
+		Style = "Text",
+		HTextAlign = "Left",
+		Padding = 5,
+		StrokeWidth = 1,
+		Position = {3 * btn_size[1], title_size[2] + (2.5 * btn_size[2])},
+		Size = {3 * btn_size[1], btn_size[2]}
+	}
+	layout["SerialNumber"] = {
+		PrettyName = "System~Serial Number",
+		Style = "Text",
+		HTextAlign = "Left",
+		Padding = 5,
+		StrokeWidth = 1,
+		Position = {3 * btn_size[1], title_size[2] + (3.5 * btn_size[2])},
+		Size = {3 * btn_size[1], btn_size[2]}
+	}
+	layout["FirmwareVersion"] = {
+		PrettyName = "System~Firmware Version",
+		Style = "Text",
+		HTextAlign = "Left",
+		Padding = 5,
+		StrokeWidth = 1,
+		Position = {3 * btn_size[1], title_size[2] + (4.5 * btn_size[2])},
+		Size = {3 * btn_size[1], btn_size[2]}
+	}
+	layout["Temperature"] = {
+		PrettyName = "System~Temperature",
+		Style = "Text",
+		HTextAlign = "Left",
+		Padding = 5,
+		StrokeWidth = 1,
 		Color = {223, 0, 36},
-		UnlinkOffColor = false,
-		Position = {x + 5, y + 20},
-		Size = {30, 30}
+		Position = {3 * btn_size[1], title_size[2] + (5.5 * btn_size[2])},
+		Size = {3 * btn_size[1], btn_size[2]}
 	}
-	layout["PowerOff"] = {
-		Legend = "Off",
-		PrettyName = "Display~Power Off",
-		Style = "Button",
-		ButtonStyle = "Momentary",
-		Color = {223, 0, 36},
-		UnlinkOffColor = false,
-		Position = {x + 35, y + 20},
-		Size = {30, 30}
-	}
-	table.insert(
-		graphics,
-		{
-			Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
-			Text = "Power",
-			HTextAlign = "Left",
-			Fill = Colors.White,
-			CornerRadius = 8,
-			StrokeColor = Colors.Black,
-			StrokeWidth = 1,
-			Position = {x, y},
-			Size = {120, 55} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
+	if current_page == "Display" then
+		table.insert(
+			graphics,
+			{
+				Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
+				Text = "Display",
+				HTextAlign = "Left",
+				Fill = Colors.White,
+				CornerRadius = 8,
+				StrokeColor = Colors.samsung_blue,
+				StrokeWidth = 1,
+				Position = display_groupbox_position,
+				Size = display_groupbox_size
+			}
+		)
+		table.insert(
+			graphics,
+			{
+				Type = "Text",
+				Text = "Power:",
+				Font = "Roboto",
+				FontSize = 12,
+				FontStyle = "Bold",
+				HTextAlign = "Right",
+				Color = Colors.Black,
+				Position = {0, display_groupbox_position[2] + (0.5 * btn_size[2])},
+				Size = {3 * btn_size[1], btn_size[2]}
+			}
+		)
+		table.insert(
+			graphics,
+			{
+				Type = "Text",
+				Text = "Blank:",
+				Font = "Roboto",
+				FontSize = 12,
+				FontStyle = "Bold",
+				HTextAlign = "Right",
+				Color = Colors.Black,
+				Position = {0, display_groupbox_position[2] + (1.5 * btn_size[2])},
+				Size = {3 * btn_size[1], btn_size[2]}
+			}
+		)
+		table.insert(
+			graphics,
+			{
+				Type = "Text",
+				Text = "Input:",
+				Font = "Roboto",
+				FontSize = 12,
+				FontStyle = "Bold",
+				HTextAlign = "Right",
+				Color = Colors.Black,
+				Position = {0, display_groupbox_position[2] + (2.5 * btn_size[2])},
+				Size = {3 * btn_size[1], btn_size[2]}
+			}
+		)
+		table.insert(
+			graphics,
+			{
+				Type = "Text",
+				Text = "Pattern Display:",
+				Font = "Roboto",
+				FontSize = 12,
+				FontStyle = "Bold",
+				HTextAlign = "Right",
+				Color = Colors.Black,
+				Position = {0, display_groupbox_position[2] + (3.5 * btn_size[2])},
+				Size = {3 * btn_size[1], btn_size[2]}
+			}
+		)
+		layout["PowerState"] = {
+			PrettyName = "Display~Power State",
+			Style = "Indicator",
+			OffColor = {0, 0, 0},
+			Color = {0, 255, 0},
+			UnlinkOffColor = false,
+			Position = {
+				(3 * btn_size[1]) + ((btn_size[1] - btn_size[2]) / 2),
+				display_groupbox_position[2] + (0.5 * btn_size[2])
+			},
+			Size = {btn_size[2], btn_size[2]}
 		}
-	)
-
-	-- Video Blank State
-	x, y = 125, 270
-	layout["BlankState"] = {
-		PrettyName = "Display~Blank State",
-		Style = "Indicator",
-		OffColor = {0, 0, 0},
-		Color = {0, 255, 0},
-		UnlinkOffColor = false,
-		Position = {x + 50, y},
-		Size = {20, 20}
-	}
-	layout["BlankOn"] = {
-		Legend = "On",
-		PrettyName = "Display~Blank On",
-		Style = "Button",
-		ButtonStyle = "Momentary",
-		Color = {223, 0, 36},
-		UnlinkOffColor = false,
-		Position = {x + 10, y + 20},
-		Size = {30, 30}
-	}
-	layout["BlankOff"] = {
-		Legend = "Off",
-		PrettyName = "Display~Blank Off",
-		Style = "Button",
-		ButtonStyle = "Momentary",
-		Color = {223, 0, 36},
-		UnlinkOffColor = false,
-		Position = {x + 40, y + 20},
-		Size = {30, 30}
-	}
-	table.insert(
-		graphics,
-		{
-			Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
-			Text = "Blank",
-			HTextAlign = "Left",
-			Fill = Colors.White,
-			CornerRadius = 8,
-			StrokeColor = Colors.Black,
-			StrokeWidth = 1,
-			Position = {x + 5, y},
-			Size = {120, 55} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
+		layout["PowerOn"] = {
+			Legend = "On",
+			PrettyName = "Display~Power On",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {4 * btn_size[1], display_groupbox_position[2] + (0.5 * btn_size[2])},
+			Size = btn_size
 		}
-	)
-	-- Source State
-	x, y = 0, 335
-	layout["SourceActive"] = {
+		layout["PowerOff"] = {
+			Legend = "Off",
+			PrettyName = "Display~Power Off",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {5 * btn_size[1], display_groupbox_position[2] + (0.5 * btn_size[2])},
+			Size = btn_size
+		}
+		layout["BlankState"] = {
+			PrettyName = "Display~Blank State",
+			Style = "Indicator",
+			OffColor = {0, 0, 0},
+			Color = {0, 255, 0},
+			UnlinkOffColor = false,
+			Position = {
+				(3 * btn_size[1]) + ((btn_size[1] - btn_size[2]) / 2),
+				display_groupbox_position[2] + (1.5 * btn_size[2])
+			},
+			Size = {btn_size[2], btn_size[2]}
+		}
+		layout["BlankOn"] = {
+			Legend = "On",
+			PrettyName = "Display~Blank On",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(4 * btn_size[1]), display_groupbox_position[2] + (1.5 * btn_size[2])},
+			Size = btn_size
+		}
+		layout["BlankOff"] = {
+			Legend = "Off",
+			PrettyName = "Display~Blank Off",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(5 * btn_size[1]), display_groupbox_position[2] + (1.5 * btn_size[2])},
+			Size = btn_size
+		}
+		--[[layout["SourceActive"] = {
 		PrettyName = "Display~Source Active",
 		Style = "Fader",
-		Position = {x + 100, y},
+		Position = {},
 		Size = {36, 16}
-	}
-	layout["SourceHDMI01"] = {
-		Legend = "HDMI1",
-		PrettyName = "Display~HDMI 1",
-		Style = "Button",
-		ButtonStyle = "Momentary",
-		Color = {223, 0, 36},
-		UnlinkOffColor = false,
-		Position = {x + 5, y + 20},
-		Size = {40, 30}
-	}
-	layout["SourceHDMI02"] = {
-		Legend = "HDMI2",
-		PrettyName = "Display~HDMI 2",
-		Style = "Button",
-		ButtonStyle = "Momentary",
-		Color = {223, 0, 36},
-		UnlinkOffColor = false,
-		Position = {x + 45, y + 20},
-		Size = {40, 30}
-	}
-	layout["SourceDVI01"] = {
-		Legend = "DVI1",
-		PrettyName = "Display~DVI",
-		Style = "Button",
-		ButtonStyle = "Momentary",
-		Color = {223, 0, 36},
-		UnlinkOffColor = false,
-		Position = {x + 85, y + 20},
-		Size = {40, 30}
-	}
-	layout["SourceMagicInfo"] = {
-		Legend = "Magic Info",
-		PrettyName = "Display~MagicInfo",
-		Style = "Button",
-		ButtonStyle = "Momentary",
-		Color = {223, 0, 36},
-		UnlinkOffColor = false,
-		Position = {x + 125, y + 20},
-		Size = {40, 30}
-	}
-	table.insert(
-		graphics,
-		{
-			Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
-			Text = "Source",
-			HTextAlign = "Left",
-			Fill = Colors.White,
-			CornerRadius = 8,
-			StrokeColor = Colors.Black,
-			StrokeWidth = 1,
-			Position = {x, y},
-			Size = {250, 55} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
+	}]]
+		layout["SourceHDMI01"] = {
+			Legend = "HDMI1",
+			PrettyName = "Display~HDMI 1",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			--Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(3 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
+			Size = btn_size
 		}
-	)
-
-	-- Test Pattern State
-	x, y = 0, 400
-	layout["PatternDisplayActive"] = {
+		layout["SourceHDMI02"] = {
+			Legend = "HDMI2",
+			PrettyName = "Display~HDMI 2",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			--Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(4 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
+			Size = btn_size
+		}
+		layout["SourceDVI01"] = {
+			Legend = "DVI1",
+			PrettyName = "Display~DVI",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			--Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(5 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
+			Size = btn_size
+		}
+		layout["SourceMagicInfo"] = {
+			Legend = "Magic Info",
+			PrettyName = "Display~MagicInfo",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			--Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(6 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
+			Size = btn_size
+		}
+		--[[layout["PatternDisplayActive"] = {
 		PrettyName = "Pattern~Current",
 		Style = "Fader",
 		Position = {x + 100, y},
 		Size = {36, 16}
-	}
-	layout["PatternDisplayBlack100"] = {
-		Legend = "Black 100%",
-		PrettyName = "Pattern~Black 100%",
-		Style = "Button",
-		ButtonStyle = "Momentary",
-		Color = {223, 0, 36},
-		UnlinkOffColor = false,
-		Position = {x + 5, y + 20},
-		Size = {40, 30}
-	}
-	layout["PatternDisplayBlack50"] = {
-		Legend = "Black 50%",
-		PrettyName = "Pattern~Black 50%",
-		Style = "Button",
-		ButtonStyle = "Momentary",
-		Color = {223, 0, 36},
-		UnlinkOffColor = false,
-		Position = {x + 45, y + 20},
-		Size = {40, 30}
-	}
-	layout["PatternDisplayRotatingRGBW"] = {
-		Legend = "Rotating RGBW",
-		PrettyName = "Pattern~Rotating RGBW",
-		Style = "Button",
-		ButtonStyle = "Momentary",
-		Color = {223, 0, 36},
-		UnlinkOffColor = false,
-		Position = {x + 85, y + 20},
-		Size = {40, 30}
-	}
-	layout["PatternDisplayOff"] = {
-		Legend = "Off",
-		PrettyName = "Pattern~Off",
-		Style = "Button",
-		ButtonStyle = "Momentary",
-		Color = {223, 0, 36},
-		UnlinkOffColor = false,
-		Position = {x + 125, y + 20},
-		Size = {40, 30}
-	}
-	table.insert(
-		graphics,
-		{
-			Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
-			Text = "Pattern Display",
-			HTextAlign = "Left",
-			Fill = Colors.White,
-			CornerRadius = 8,
-			StrokeColor = Colors.Black,
-			StrokeWidth = 1,
-			Position = {x, y},
-			Size = {250, 55} -- The width of the main GroupBox is dependent on how many channels the user specified. More channels means a wider group box
+	}]]
+		layout["PatternDisplayBlack100"] = {
+			Legend = "Black 100%",
+			PrettyName = "Pattern~Black 100%",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			--Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(3 * btn_size[1]), display_groupbox_position[2] + (3.5 * btn_size[2])},
+			Size = btn_size
 		}
-	)
+		layout["PatternDisplayBlack50"] = {
+			Legend = "Black 50%",
+			PrettyName = "Pattern~Black 50%",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			--Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(4 * btn_size[1]), display_groupbox_position[2] + (3.5 * btn_size[2])},
+			Size = btn_size
+		}
+		layout["PatternDisplayRotatingRGBW"] = {
+			Legend = "Rotating RGBW",
+			PrettyName = "Pattern~Rotating RGBW",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			--Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(5 * btn_size[1]), display_groupbox_position[2] + (3.5 * btn_size[2])},
+			Size = btn_size
+		}
+		layout["PatternDisplayOff"] = {
+			Legend = "Off",
+			PrettyName = "Pattern~Off",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			--Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(6 * btn_size[1]), display_groupbox_position[2] + (3.5 * btn_size[2])},
+			Size = btn_size
+		}
+	elseif current_page == "Audio" then
+		table.insert(
+			graphics,
+			{
+				Type = "GroupBox", -- This is the overall groupbox that will give the plugin a more 'contained' look
+				Text = "Audio",
+				HTextAlign = "Left",
+				Fill = Colors.White,
+				CornerRadius = 8,
+				StrokeColor = Colors.samsung_blue,
+				StrokeWidth = 1,
+				Position = audio_groupbox_position,
+				Size = audio_groupbox_size
+			}
+		)
+		layout["Gain"] = {
+			PrettyName = "Audio~Gain",
+			Style = "Fader",
+			Position = {1.5 * btn_size[1], audio_groupbox_position[2] + (1 * btn_size[2])},
+			Size = {5 * btn_size[1], btn_size[2]}
+		}
+		layout["Mute"] = {
+			Legend = "Mute",
+			PrettyName = "Audio~Mute",
+			Style = "Button",
+			ButtonStyle = "Toggle",
+			Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {0.5 * btn_size[1], audio_groupbox_position[2] + (1 * btn_size[2])},
+			Size = btn_size
+		}
+	end
 
 	return layout, graphics
 end
@@ -1093,8 +1117,8 @@ if Controls then
 				--print("SW Response - Error")
 			else
 				--print("SW Response - [" .. data:sub(2) .. "]")
-				if Controls.SoftwareVersion then
-					Controls.SoftwareVersion.String = data:sub(2)
+				if Controls.FirmwareVersion then
+					Controls.FirmwareVersion.String = data:sub(2)
 				end
 			end
 			-- Request MetaData - Screen Blank
