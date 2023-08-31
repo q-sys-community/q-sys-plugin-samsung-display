@@ -194,7 +194,7 @@ function GetControls(props)
 			Name = "SourceHDMI01",
 			ControlType = "Button",
 			ButtonType = "Momentary",
-			PinStyle = "Input",
+			PinStyle = "Both",
 			Count = 1,
 			UserPin = true
 		},
@@ -202,7 +202,7 @@ function GetControls(props)
 			Name = "SourceHDMI02",
 			ControlType = "Button",
 			ButtonType = "Momentary",
-			PinStyle = "Input",
+			PinStyle = "Both",
 			Count = 1,
 			UserPin = true
 		},
@@ -210,7 +210,7 @@ function GetControls(props)
 			Name = "SourceDVI01",
 			ControlType = "Button",
 			ButtonType = "Momentary",
-			PinStyle = "Input",
+			PinStyle = "Both",
 			Count = 1,
 			UserPin = true
 		},
@@ -218,7 +218,15 @@ function GetControls(props)
 			Name = "SourceMagicInfo",
 			ControlType = "Button",
 			ButtonType = "Momentary",
-			PinStyle = "Input",
+			PinStyle = "Both",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "SourceUrlLauncher",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Both",
 			Count = 1,
 			UserPin = true
 		},
@@ -285,10 +293,10 @@ function GetControlLayout(props)
 
 	local current_page = pagenames[props["page_index"].Value]
 	local btn_size = {40, 24}
-	local title_size = {7 * btn_size[1], 32}
+	local title_size = {8 * btn_size[1], 32}
 	local status_groupbox_size = {title_size[1], 7 * btn_size[2]}
 	local display_groupbox_position = {0, title_size[2] + status_groupbox_size[2] + (0.5 * btn_size[2])}
-	local display_groupbox_size = {title_size[1], 5 * btn_size[2]}
+	local display_groupbox_size = {title_size[1], 7 * btn_size[2]}
 	local audio_groupbox_position = display_groupbox_position
 	local audio_groupbox_size = {title_size[1], 3 * btn_size[2]}
 
@@ -583,7 +591,7 @@ function GetControlLayout(props)
 			--Color = {223, 0, 36},
 			UnlinkOffColor = false,
 			Position = {(3 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
-			Size = btn_size
+			Size = {btn_size[1], 2 * btn_size[2]}
 		}
 		layout["SourceHDMI02"] = {
 			Legend = "HDMI2",
@@ -593,7 +601,7 @@ function GetControlLayout(props)
 			--Color = {223, 0, 36},
 			UnlinkOffColor = false,
 			Position = {(4 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
-			Size = btn_size
+			Size = {btn_size[1], 2 * btn_size[2]}
 		}
 		layout["SourceDVI01"] = {
 			Legend = "DVI1",
@@ -603,17 +611,27 @@ function GetControlLayout(props)
 			--Color = {223, 0, 36},
 			UnlinkOffColor = false,
 			Position = {(5 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
-			Size = btn_size
+			Size = {btn_size[1], 2 * btn_size[2]}
 		}
 		layout["SourceMagicInfo"] = {
-			Legend = "Magic Info",
+			Legend = "Magic\rInfo",
 			PrettyName = "Display~MagicInfo",
 			Style = "Button",
 			ButtonStyle = "Momentary",
 			--Color = {223, 0, 36},
 			UnlinkOffColor = false,
 			Position = {(6 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
-			Size = btn_size
+			Size = {btn_size[1], 2 * btn_size[2]}
+		}
+		layout["SourceUrlLauncher"] = {
+			Legend = "URL\rLauncher",
+			PrettyName = "Display~URL Launcher",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			--Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(7 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
+			Size = {btn_size[1], 2 * btn_size[2]}
 		}
 		--[[layout["PatternDisplayActive"] = {
 		PrettyName = "Pattern~Current",
@@ -622,34 +640,34 @@ function GetControlLayout(props)
 		Size = {36, 16}
 	}]]
 		layout["PatternDisplayBlack100"] = {
-			Legend = "Black 100%",
+			Legend = "Black\r100%",
 			PrettyName = "Pattern~Black 100%",
 			Style = "Button",
 			ButtonStyle = "Momentary",
 			--Color = {223, 0, 36},
 			UnlinkOffColor = false,
-			Position = {(3 * btn_size[1]), display_groupbox_position[2] + (3.5 * btn_size[2])},
-			Size = btn_size
+			Position = {(3 * btn_size[1]), display_groupbox_position[2] + (4.5 * btn_size[2])},
+			Size = {btn_size[1], 2 * btn_size[2]}
 		}
 		layout["PatternDisplayBlack50"] = {
-			Legend = "Black 50%",
+			Legend = "Black\r50%",
 			PrettyName = "Pattern~Black 50%",
 			Style = "Button",
 			ButtonStyle = "Momentary",
 			--Color = {223, 0, 36},
 			UnlinkOffColor = false,
-			Position = {(4 * btn_size[1]), display_groupbox_position[2] + (3.5 * btn_size[2])},
-			Size = btn_size
+			Position = {(4 * btn_size[1]), display_groupbox_position[2] + (4.5 * btn_size[2])},
+			Size = {btn_size[1], 2 * btn_size[2]}
 		}
 		layout["PatternDisplayRotatingRGBW"] = {
-			Legend = "Rotating RGBW",
+			Legend = "Rotating\rRGBW",
 			PrettyName = "Pattern~Rotating RGBW",
 			Style = "Button",
 			ButtonStyle = "Momentary",
 			--Color = {223, 0, 36},
 			UnlinkOffColor = false,
-			Position = {(5 * btn_size[1]), display_groupbox_position[2] + (3.5 * btn_size[2])},
-			Size = btn_size
+			Position = {(5 * btn_size[1]), display_groupbox_position[2] + (4.5 * btn_size[2])},
+			Size = {btn_size[1], 2 * btn_size[2]}
 		}
 		layout["PatternDisplayOff"] = {
 			Legend = "Off",
@@ -658,8 +676,8 @@ function GetControlLayout(props)
 			ButtonStyle = "Momentary",
 			--Color = {223, 0, 36},
 			UnlinkOffColor = false,
-			Position = {(6 * btn_size[1]), display_groupbox_position[2] + (3.5 * btn_size[2])},
-			Size = btn_size
+			Position = {(6 * btn_size[1]), display_groupbox_position[2] + (4.5 * btn_size[2])},
+			Size = {btn_size[1], 2 * btn_size[2]}
 		}
 	elseif current_page == "Audio" then
 		table.insert(
@@ -942,6 +960,9 @@ if Controls then
 					elseif k == "MagicInfo" then
 						debug("Pin:Sending MagicInfo")
 						Samsung.desiredSource = "\x20"
+					elseif k == "UrlLauncher" then
+						debug("Pin:Sending URL Launcher")
+						Samsung.desiredSource = "\x63"
 					end
 					switchSource(Samsung.desiredSource)
 					Samsung.desiredPower = true
@@ -1029,7 +1050,8 @@ if Controls then
 						(Samsung.desiredSource ~= nil or
 						(Force and
 							(Controls.SourceHDMI01.Boolean or Controls.SourceHDMI02.Boolean or Controls.SourceDVI01.Boolean or
-								Controls.SourceMagicInfo.Boolean)))
+								Controls.SourceMagicInfo.Boolean or
+								Controls.SourceUrlLauncher.Boolean)))
 					if PowerRequired == true and Controls.PowerState.Boolean == false then
 						print("Force: Source wants PowerOn")
 						fnSend("\x11", "\x01")
@@ -1051,6 +1073,7 @@ if Controls then
 							(Controls.SourceActive.Value ~= 31 and
 								((Force and Controls.SourceDVI01.Boolean == true) or Samsung.desiredSource == "\x18"))
 						 then
+							--???????
 						elseif Controls.SourceDVI01.Boolean == true and Controls.SourceActive.Value ~= 31 then
 							print("Force: Sending Source DVI01")
 							fnSend("\x14", "\x18")
@@ -1060,6 +1083,12 @@ if Controls then
 						 then
 							print("Force: Sending Source MagicInfo")
 							fnSend("\x14", "\x20")
+						elseif
+							(Controls.SourceActive.Value ~= 99 and
+								((Force and Controls.SourceUrlLauncher.Boolean == true) or Samsung.desiredSource == "\x63"))
+						 then
+							print("Force: Sending Source URL Launcher")
+							fnSend("\x14", "\x63")
 						end
 						Samsung.desiredSource = nil
 					end
