@@ -207,6 +207,46 @@ function GetControls(props)
 			UserPin = true
 		},
 		{
+			Name = "SourceHDMI03",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Both",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "SourceHDMI04",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Both",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "SourceDisplayPort01",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Both",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "SourceDisplayPort02",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Both",
+			Count = 1,
+			UserPin = true
+		},
+		{
+			Name = "SourceDisplayPort03",
+			ControlType = "Button",
+			ButtonType = "Momentary",
+			PinStyle = "Both",
+			Count = 1,
+			UserPin = true
+		},
+		{
 			Name = "SourceDVI01",
 			ControlType = "Button",
 			ButtonType = "Momentary",
@@ -293,7 +333,7 @@ function GetControlLayout(props)
 
 	local current_page = pagenames[props["page_index"].Value]
 	local btn_size = {40, 24}
-	local title_size = {8 * btn_size[1], 32}
+	local title_size = {13 * btn_size[1], 32}
 	local status_groupbox_size = {title_size[1], 7 * btn_size[2]}
 	local display_groupbox_position = {0, title_size[2] + status_groupbox_size[2] + (0.5 * btn_size[2])}
 	local display_groupbox_size = {title_size[1], 7 * btn_size[2]}
@@ -603,6 +643,56 @@ function GetControlLayout(props)
 			Position = {(4 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
 			Size = {btn_size[1], 2 * btn_size[2]}
 		}
+		layout["SourceHDMI03"] = {
+			Legend = "HDMI3",
+			PrettyName = "Display~HDMI 3",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			--Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(5 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
+			Size = {btn_size[1], 2 * btn_size[2]}
+		}
+		layout["SourceHDMI04"] = {
+			Legend = "HDMI4",
+			PrettyName = "Display~HDMI 4",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			--Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(6 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
+			Size = {btn_size[1], 2 * btn_size[2]}
+		}
+		layout["SourceDisplayPort01"] = {
+			Legend = "DP1",
+			PrettyName = "Display~DisplayPort 1",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			--Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(7 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
+			Size = {btn_size[1], 2 * btn_size[2]}
+		}
+		layout["SourceDisplayPort02"] = {
+			Legend = "DP2",
+			PrettyName = "Display~DisplayPort 2",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			--Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(8 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
+			Size = {btn_size[1], 2 * btn_size[2]}
+		}
+		layout["SourceDisplayPort03"] = {
+			Legend = "DP3",
+			PrettyName = "Display~DisplayPort 3",
+			Style = "Button",
+			ButtonStyle = "Momentary",
+			--Color = {223, 0, 36},
+			UnlinkOffColor = false,
+			Position = {(9 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
+			Size = {btn_size[1], 2 * btn_size[2]}
+		}
 		layout["SourceDVI01"] = {
 			Legend = "DVI1",
 			PrettyName = "Display~DVI",
@@ -610,7 +700,7 @@ function GetControlLayout(props)
 			ButtonStyle = "Momentary",
 			--Color = {223, 0, 36},
 			UnlinkOffColor = false,
-			Position = {(5 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
+			Position = {(10 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
 			Size = {btn_size[1], 2 * btn_size[2]}
 		}
 		layout["SourceMagicInfo"] = {
@@ -620,7 +710,7 @@ function GetControlLayout(props)
 			ButtonStyle = "Momentary",
 			--Color = {223, 0, 36},
 			UnlinkOffColor = false,
-			Position = {(6 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
+			Position = {(11 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
 			Size = {btn_size[1], 2 * btn_size[2]}
 		}
 		layout["SourceUrlLauncher"] = {
@@ -630,7 +720,7 @@ function GetControlLayout(props)
 			ButtonStyle = "Momentary",
 			--Color = {223, 0, 36},
 			UnlinkOffColor = false,
-			Position = {(7 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
+			Position = {(12 * btn_size[1]), display_groupbox_position[2] + (2.5 * btn_size[2])},
 			Size = {btn_size[1], 2 * btn_size[2]}
 		}
 		--[[layout["PatternDisplayActive"] = {
@@ -954,6 +1044,21 @@ if Controls then
 					elseif k == "HDMI02" then
 						debug("Pin:Sending HDMI2")
 						Samsung.desiredSource = "\x23"
+					elseif k == "HDMI03" then
+						debug("Pin:Sending HDMI3")
+						Samsung.desiredSource = "\x31"
+					elseif k == "HDMI04" then
+						debug("Pin:Sending HDMI4")
+						Samsung.desiredSource = "\x33"
+					elseif k == "DisplayPort01" then
+						debug("Pin:Sending DP1")
+						Samsung.desiredSource = "\x25"
+					elseif k == "DisplayPort02" then
+						debug("Pin:Sending DP2")
+						Samsung.desiredSource = "\x26"
+					elseif k == "DisplayPort03" then
+						debug("Pin:Sending DP3")
+						Samsung.desiredSource = "\x27"
 					elseif k == "DVI01" then
 						debug("Pin:Sending DVI1")
 						Samsung.desiredSource = "\x18"
@@ -1069,6 +1174,36 @@ if Controls then
 						 then
 							print("Force: Sending Source HDMI02")
 							fnSend("\x14", "\x23")
+						elseif
+							(Controls.SourceActive.Value ~= 49 and
+								((Force and Controls.SourceHDMI03.Boolean == true) or Samsung.desiredSource == "\x31"))
+						 then
+							print("Force: Sending Source HDMI03")
+							fnSend("\x14", "\x31")
+						elseif
+							(Controls.SourceActive.Value ~= 51 and
+								((Force and Controls.SourceHDMI04.Boolean == true) or Samsung.desiredSource == "\x33"))
+						 then
+							print("Force: Sending Source HDMI04")
+							fnSend("\x14", "\x33")
+						elseif
+							(Controls.SourceActive.Value ~= 37 and
+								((Force and Controls.SourceDisplayPort01.Boolean == true) or Samsung.desiredSource == "\x25"))
+						 then
+							print("Force: Sending Source DP01")
+							fnSend("\x14", "\x25")
+						elseif
+							(Controls.SourceActive.Value ~= 38 and
+								((Force and Controls.SourceDisplayPort02.Boolean == true) or Samsung.desiredSource == "\x26"))
+						 then
+							print("Force: Sending Source DP02")
+							fnSend("\x14", "\x26")
+						elseif
+							(Controls.SourceActive.Value ~= 39 and
+								((Force and Controls.SourceDisplayPort03.Boolean == true) or Samsung.desiredSource == "\x27"))
+						 then
+							print("Force: Sending Source DP03")
+							fnSend("\x14", "\x27")
 						elseif
 							(Controls.SourceActive.Value ~= 31 and
 								((Force and Controls.SourceDVI01.Boolean == true) or Samsung.desiredSource == "\x18"))
